@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Instruction {
     Increment,
     Decrement,
@@ -33,6 +33,7 @@ fn run(input: &str) {
     let mut pc = 0;
     let mut mc = 0;
     let mut program = parse(input);
+    // set_jumps(&mut program);
 
     // println!("{:?}", program);
 
@@ -61,6 +62,32 @@ fn run(input: &str) {
     }
 }
 
+fn set_jumps(program: &[Instruction]) {
+
+}
+
 fn main() {
     run("++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.");
+}
+
+#[test]
+fn test_set_jump() {
+    let program = vec![Instruction::Increment,
+        Instruction::JumpForward(0),
+        Instruction::Decrement,
+        Instruction::JumpForward(0),
+        Instruction::JumpBackward(0),
+        Instruction::JumpBackward(0)
+    ];
+
+    let expected_program = vec![Instruction::Increment,
+        Instruction::JumpForward(4),
+        Instruction::Decrement,
+        Instruction::JumpForward(5),
+        Instruction::JumpBackward(1),
+        Instruction::JumpBackward(3)
+    ];
+
+    set_jumps(&program);
+    assert_eq!(program, expected_program);
 }
