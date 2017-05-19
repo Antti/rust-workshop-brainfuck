@@ -30,30 +30,29 @@ fn parse(input: &str) -> Vec<Instruction> {
 
 fn run(input: &str) {
     let mut memory = vec![0u8; 30_000];
-    let mut pc = 0;
-    let mut mc = 0;
-    let mut program = parse(input);
-    // set_jumps(&mut program);
 
-    // println!("{:?}", program);
+    let mut pc = 0;
+    let mut mp = 0;
+    let mut program = parse(input);
+    set_jumps(&mut program);
 
     while pc < program.len() {
         match program[pc] {
-            Instruction::Increment => memory[mc] += 1,
-            Instruction::Decrement => memory[mc] -= 1,
+            Instruction::Increment => memory[mp] = (memory[mp].overflowing_add(1)).0,
+            Instruction::Decrement => memory[mp] = (memory[mp].overflowing_sub(1)).0,
             Instruction::JumpForward(jump_location) => {
-                if memory[mc] == 0 {
+                if memory[mp] == 0 {
                     pc = jump_location;
                 }
             },
             Instruction::JumpBackward(jump_location) => {
-                if memory[mc] != 0 {
+                if memory[mp] != 0 {
                     pc = jump_location;
                 }
             },
-            Instruction::Forward => mc += 1,
-            Instruction::Backward => mc -= 1,
-            Instruction::Out => print!("{}", memory[mc] as char),
+            Instruction::Forward => mp += 1,
+            Instruction::Backward => mp -= 1,
+            Instruction::Out => print!("{}", memory[mp] as char),
             Instruction::In => println!("Found input"),
             Instruction::JumpF => { panic!("Unprocessed jump") }
             Instruction::JumpB => { panic!("Unprocessed jump") }
@@ -62,8 +61,23 @@ fn run(input: &str) {
     }
 }
 
-fn set_jumps(program: &[Instruction]) {
-
+fn set_jumps(program: &mut [Instruction]) { 
+    let mut stack = vec![];
+    for (index, instruction) in program.iter_mut().enumerate() {
+        match instruction {
+            &mut Instruction::JumpF => stack.push((index, instruction)),
+            &mut Instruction::JumpB => {
+                match stack.pop() {
+                    Some((jump_forward_index, jump_forward_instruction)) => {
+                        *instruction = Instruction::JumpBackward(jump_forward_index);
+                        *jump_forward_instruction = Instruction::JumpForward(index);
+                    },
+                    None => panic!("Mismatched brackets")
+                }
+            },
+            _ => {}
+        }
+    }
 }
 
 fn main() {
@@ -72,22 +86,22 @@ fn main() {
 
 #[test]
 fn test_set_jump() {
-    let program = vec![Instruction::Increment,
-        Instruction::JumpForward(0),
+    let mut program = vec![Instruction::Increment,
+        Instruction::JumpF,
         Instruction::Decrement,
-        Instruction::JumpForward(0),
-        Instruction::JumpBackward(0),
-        Instruction::JumpBackward(0)
+        Instruction::JumpF,
+        Instruction::JumpB,
+        Instruction::JumpB
     ];
 
     let expected_program = vec![Instruction::Increment,
-        Instruction::JumpForward(4),
-        Instruction::Decrement,
         Instruction::JumpForward(5),
-        Instruction::JumpBackward(1),
-        Instruction::JumpBackward(3)
+        Instruction::Decrement,
+        Instruction::JumpForward(4),
+        Instruction::JumpBackward(3),
+        Instruction::JumpBackward(1)
     ];
 
-    set_jumps(&program);
+    set_jumps(&mut program);
     assert_eq!(program, expected_program);
 }
