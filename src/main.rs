@@ -61,7 +61,7 @@ fn run(input: &str) {
     }
 }
 
-fn set_jumps(program: &mut [Instruction]) { 
+fn set_jumps(program: &mut [Instruction]) {
     let mut stack = vec![];
     for (index, instruction) in program.iter_mut().enumerate() {
         match instruction {
@@ -81,7 +81,14 @@ fn set_jumps(program: &mut [Instruction]) {
 }
 
 fn main() {
-    run("++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.");
+    use std::io::prelude::*;
+
+    let mut program = String::new();
+
+    let mut file = std::fs::File::open("/dev/stdin").expect("Can't open file");
+    file.read_to_string(&mut program).expect("Can't read file");
+
+    run(&program);
 }
 
 #[test]
